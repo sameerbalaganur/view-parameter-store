@@ -9,6 +9,7 @@ pipeline {
     environment {
         AWS_REGION = "${params.REGION}"
         AWS_DEFAULT_REGION = "${params.REGION}"
+        AWS_PAGER=""
     }
     
     stages {
@@ -26,34 +27,9 @@ pipeline {
                 sh """
                     aws ssm get-parameter \
                         --name '${params.PARAMETER_NAME}' \
+                        --with-decryption \
                         --output text \
                         --region ${AWS_REGION} || echo 'Parameter not found'
-                """
-            }
-        }
-
-        stage('List All Parameters') {
-            steps {
-                echo "=== All Parameters in ${AWS_REGION} ==="
-                sh """
-                    aws ssm describe-parameters \
-                        --query "Parameters[*].[Name,Type,LastModifiedDate]" \
-                        --output table \
-                        --region ${AWS_REGION}
-                """
-            }
-        }
-
-        stage('Get Parameters by Path') {
-            steps {
-                echo "=== Parameters under /dev/ path ==="
-                sh """
-                    aws ssm get-parameters-by-path \
-                        --path '${params.PARAMETER_NAME}' \
-                        --recursive \
-                        --query "Parameters[*].[Name,Value]" \
-                        --output table \
-                        --region ${AWS_REGION} || echo "No parameters found under /dev/"
                 """
             }
         }
