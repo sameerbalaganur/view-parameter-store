@@ -22,55 +22,40 @@ pipeline {
         
         stage('View Single Parameter') {
             steps {
-                script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-                                      credentialsId: 'github-credentials']]) {
-                        echo "=== Retrieving Parameter ==="
-                        sh """
-                            aws ssm get-parameter \
-                                --name '${params.PARAMETER_NAME}' \
-                                --query 'Parameter.Value' \
-                                --output text \
-                                --region ${AWS_REGION} || echo 'Parameter not found'
-                        """
-                    }
-                }
+                echo "=== Retrieving Parameter using EC2 IAM Role ==="
+                sh """
+                    aws ssm get-parameter \
+                        --name '${params.PARAMETER_NAME}' \
+                        --query 'Parameter.Value' \
+                        --output text \
+                        --region ${AWS_REGION} || echo 'Parameter not found'
+                """
             }
         }
-        
+
         stage('List All Parameters') {
             steps {
-                script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-                                      credentialsId: 'github-credentials']]) {
-                        echo "=== All Parameters in ${AWS_REGION} ==="
-                        sh """
-                            aws ssm describe-parameters \
-                                --query "Parameters[*].[Name,Type,LastModifiedDate]" \
-                                --output table \
-                                --region ${AWS_REGION}
-                        """
-                    }
-                }
+                echo "=== All Parameters in ${AWS_REGION} ==="
+                sh """
+                    aws ssm describe-parameters \
+                        --query "Parameters[*].[Name,Type,LastModifiedDate]" \
+                        --output table \
+                        --region ${AWS_REGION}
+                """
             }
         }
-        
+
         stage('Get Parameters by Path') {
             steps {
-                script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-                                      credentialsId: 'github-credentials']]) {
-                        echo "=== Parameters under /dev/ path ==="
-                        sh """
-                            aws ssm get-parameters-by-path \
-                                --path "/dev" \
-                                --recursive \
-                                --query "Parameters[*].[Name,Value]" \
-                                --output table \
-                                --region ${AWS_REGION} || echo "No parameters found under /dev/"
-                        """
-                    }
-                }
+                echo "=== Parameters under /dev/ path ==="
+                sh """
+                    aws ssm get-parameters-by-path \
+                        --path "/dev" \
+                        --recursive \
+                        --query "Parameters[*].[Name,Value]" \
+                        --output table \
+                        --region ${AWS_REGION} || echo "No parameters found under /dev/"
+                """
             }
         }
     }
