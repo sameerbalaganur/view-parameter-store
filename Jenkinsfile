@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-                                      credentialsId: 'aws-credentials']]) {
+                                      credentialsId: 'github-credentials']]) {
                         echo "=== Retrieving Parameter ==="
                         sh """
                             aws ssm get-parameter \
@@ -42,7 +42,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-                                      credentialsId: 'aws-credentials']]) {
+                                      credentialsId: 'github-credentials']]) {
                         echo "=== All Parameters in ${AWS_REGION} ==="
                         sh """
                             aws ssm describe-parameters \
@@ -59,7 +59,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-                                      credentialsId: 'aws-credentials']]) {
+                                      credentialsId: 'github-credentials']]) {
                         echo "=== Parameters under /dev/ path ==="
                         sh """
                             aws ssm get-parameters-by-path \
