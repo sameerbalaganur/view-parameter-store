@@ -8,6 +8,7 @@ pipeline {
     
     environment {
         AWS_REGION = "${params.REGION}"
+        AWS_DEFAULT_REGION = "${params.REGION}"
     }
     
     stages {
@@ -22,15 +23,16 @@ pipeline {
         stage('View Single Parameter') {
             steps {
                 script {
-                    withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+                                      credentialsId: 'aws-credentials']]) {
                         echo "=== Retrieving Parameter ==="
-                        def paramValue = sh(
-                            script: "aws ssm get-parameter --name '${params.PARAMETER_NAME}' --query 'Parameter.Value' --output text 2>/dev/null || echo 'Parameter not found'",
-                            returnStdout: true
-                        ).trim()
-                        
-                        echo "Parameter: ${params.PARAMETER_NAME}"
-                        echo "Value: ${paramValue}"
+                        sh """
+                            aws ssm get-parameter \
+                                --name '${params.PARAMETER_NAME}' \
+                                --query 'Parameter.Value' \
+                                --output text \
+                                --region ${AWS_REGION} || echo 'Parameter not found'
+                        """
                     }
                 }
             }
@@ -39,13 +41,15 @@ pipeline {
         stage('List All Parameters') {
             steps {
                 script {
-                    withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+                                      credentialsId: 'aws-credentials']]) {
                         echo "=== All Parameters in ${AWS_REGION} ==="
-                        sh '''
+                        sh """
                             aws ssm describe-parameters \
                                 --query "Parameters[*].[Name,Type,LastModifiedDate]" \
-                                --output table
-                        '''
+                                --output table \
+                                --region ${AWS_REGION}
+                        """
                     }
                 }
             }
@@ -54,15 +58,17 @@ pipeline {
         stage('Get Parameters by Path') {
             steps {
                 script {
-                    withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+                                      credentialsId: 'aws-credentials']]) {
                         echo "=== Parameters under /dev/ path ==="
-                        sh '''
+                        sh """
                             aws ssm get-parameters-by-path \
                                 --path "/dev" \
                                 --recursive \
                                 --query "Parameters[*].[Name,Value]" \
-                                --output table || echo "No parameters found under /dev/"
-                        '''
+                                --output table \
+                                --region ${AWS_REGION} || echo "No parameters found under /dev/"
+                        """
                     }
                 }
             }
@@ -71,7 +77,7 @@ pipeline {
     
     post {
         success {
-            echo "Pipeline completed successfully! Check the values above."
+            echo "Pipeline completed successfully!"
         }
         failure {
             echo "Pipeline failed. Check the logs above."
