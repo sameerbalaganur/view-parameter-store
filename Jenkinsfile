@@ -26,7 +26,6 @@ pipeline {
                 sh """
                     aws ssm get-parameter \
                         --name '${params.PARAMETER_NAME}' \
-                        --query 'Parameter.Value' \
                         --output text \
                         --region ${AWS_REGION} || echo 'Parameter not found'
                 """
@@ -50,7 +49,7 @@ pipeline {
                 echo "=== Parameters under /dev/ path ==="
                 sh """
                     aws ssm get-parameters-by-path \
-                        --path "/dev" \
+                        --path '${params.PARAMETER_NAME}' \
                         --recursive \
                         --query "Parameters[*].[Name,Value]" \
                         --output table \
